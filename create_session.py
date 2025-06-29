@@ -1,7 +1,1 @@
-from telethon.sync import TelegramClient
 
-API_ID = 26510293  # همونی که خودت دادی
-API_HASH = "d37649353255275bdca55f9b0e179673"
-
-with TelegramClient("user", API_ID, API_HASH) as client:
-    print("✅ Session created successfully.")
