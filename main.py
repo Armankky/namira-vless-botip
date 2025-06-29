@@ -62,7 +62,7 @@ Bot ϟ @NamiraNet ϟ"""
 async def main():
     print("程序启动，连接 Telegram 用户账号...")
     client = TelegramClient("user_session", API_ID, API_HASH)
-    await client.start(phone=PHONE_NUMBER)
+    await client.start()
 
     async with client:
         async for message in client.iter_messages(SOURCE_CHANNEL, reverse=True):
