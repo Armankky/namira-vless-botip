@@ -7,6 +7,7 @@ from telethon.sync import TelegramClient
 from telethon.tl.types import Message
 from aiogram import Bot, Dispatcher
 
+# بارگذاری متغیرهای محیطی
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
@@ -28,6 +29,7 @@ def get_country(ip):
     try:
         details = ipinfo_handler.getDetails(ip)
         country = details.country_name or "Unknown"
+        # کشور و ایموجی پرچم (اگر موجود بود)
         emoji = details.country_flag.get("emoji", "") if hasattr(details, "country_flag") else ""
         return f"{country} {emoji}".strip()
     except:
@@ -56,9 +58,9 @@ Bot ϟ @NamiraNet ϟ"""
 
 async def main():
     client = TelegramClient("session", API_ID, API_HASH)
-    await client.start()
+    # اینجا توکن ربات را می‌دهیم تا بدون ورودی اجرا شود
+    await client.start(bot_token=BOT_TOKEN)
 
-    # اینجا کانال را resolve می‌کنیم
     source_entity = await client.get_entity(SOURCE_CHANNEL)
 
     async for message in client.iter_messages(source_entity, limit=20):
