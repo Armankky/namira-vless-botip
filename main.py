@@ -4,8 +4,8 @@ import asyncio
 import ipinfo
 from ping3 import ping
 from telethon import TelegramClient
-from telethon.tl.types import Message, PeerChannel
-from aiogram import Bot, Dispatcher
+from telethon.tl.types import Message
+from aiogram import Bot
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,11 +13,10 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
-DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
+SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))  # مثال: -1002743822648
+DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))      # مثال: -1002714790180
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
 ipinfo_handler = ipinfo.getHandler()
 
 async def extract_vless_links(text):
@@ -58,17 +57,17 @@ def format_output(vless_link, country, ip, ping_val):
 Bot ϟ @NamiraNet ϟ"""
 
 async def main():
-    client = TelegramClient("session", API_ID, API_HASH)
-    await client.start(bot_token=BOT_TOKEN)
+    # اتصال با اکانت شخصی برای خواندن کانال منبع
+    user_client = TelegramClient("user", API_ID, API_HASH)
+    await user_client.start()  # با session کاربر وارد شو
 
     try:
-        source_entity = PeerChannel(abs(SOURCE_CHANNEL))
-        dest_entity = PeerChannel(abs(DEST_CHANNEL))
+        source_entity = await user_client.get_entity(SOURCE_CHANNEL)
     except Exception as e:
-        print(f"خطا در ساخت entity کانال: {e}")
+        print(f"خطا در دریافت entity کانال منبع: {e}")
         return
 
-    async for message in client.iter_messages(source_entity, limit=20):
+    async for message in user_client.iter_messages(source_entity, limit=20):
         if not isinstance(message, Message) or not message.text:
             continue
         links = await extract_vless_links(message.text)
