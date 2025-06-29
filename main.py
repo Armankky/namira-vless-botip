@@ -3,10 +3,9 @@ import re
 import asyncio
 import ipinfo
 from ping3 import ping
+from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.tl.types import Message
-from aiogram import Bot
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -17,7 +16,6 @@ SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
 DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
 
 ipinfo_handler = ipinfo.getHandler()
-bot = Bot(token=BOT_TOKEN)
 
 async def extract_vless_links(text):
     return re.findall(r'(vless://[\w\d\-]+@[\d\.]+:\d+[^\s]*)', text)
@@ -30,7 +28,8 @@ def get_country(ip):
     try:
         details = ipinfo_handler.getDetails(ip)
         country = details.country_name or "Unknown"
-        return f"{country}"
+        emoji = getattr(details, "country_flag", {}).get("emoji", "")
+        return f"{country} {emoji}".strip()
     except:
         return "Unknown"
 
@@ -56,20 +55,15 @@ def format_output(vless_link, country, ip, ping_val):
 Bot ϟ @jhjkkjkkbot ϟ"""
 
 async def main():
-    async with TelegramClient("session", API_ID, API_HASH) as client, bot:
-        try:
-            source_entity = await client.get_entity(SOURCE_CHANNEL)
-        except Exception as e:
-            print(f"خطا در دریافت کانال منبع: {e}")
-            return
+    client = TelegramClient("bot", API_ID, API_HASH)
+    await client.start(bot_token=BOT_TOKEN)
 
-        async for message in client.iter_messages(source_entity, limit=20, reverse=True):
+    async with client:
+        async for message in client.iter_messages(SOURCE_CHANNEL, limit=20, reverse=True):
             if not isinstance(message, Message) or not message.text:
                 continue
-
             print("debugID:", message.id)
-            print("debugText:", message.text[:100])
-
+            print("debugInfo:", message.text)
             links = await extract_vless_links(message.text)
             for link in links:
                 ip = get_ip_from_vless(link)
@@ -77,11 +71,8 @@ async def main():
                     country = get_country(ip)
                     ping_val = get_ping(ip)
                     formatted = format_output(link, country, ip, ping_val)
-                    try:
-                        await bot.send_message(chat_id=DEST_CHANNEL, text=formatted)
-                        await asyncio.sleep(1)
-                    except Exception as e:
-                        print(f"خطا در ارسال پیام: {e}")
+                    await client.send_message(DEST_CHANNEL, formatted)
+                    await asyncio.sleep(1)
 
 if __name__ == "__main__":
     asyncio.run(main())
