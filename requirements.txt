@@ -1,4 +1,5 @@
-telethon
+aiogram==3.4.1
+telethon==1.34.0
 ping3==3.0.4
-ipinfo==3.0.0
+ipinfo==4.4.3
 aiohttp
