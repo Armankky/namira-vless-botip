@@ -13,11 +13,11 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))  # مثال: -1002743822648
-DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))      # مثال: -1002714790180
+SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
+DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
 
-bot = Bot(token=BOT_TOKEN)
 ipinfo_handler = ipinfo.getHandler()
+bot = Bot(token=BOT_TOKEN)
 
 async def extract_vless_links(text):
     return re.findall(r'(vless://[\w\d\-]+@[\d\.]+:\d+[^\s]*)', text)
@@ -30,8 +30,7 @@ def get_country(ip):
     try:
         details = ipinfo_handler.getDetails(ip)
         country = details.country_name or "Unknown"
-        emoji = getattr(details, "country_flag", {}).get("emoji", "")
-        return f"{country} {emoji}".strip()
+        return f"{country}"
     except:
         return "Unknown"
 
@@ -54,31 +53,35 @@ def format_output(vless_link, country, ip, ping_val):
 {vless_link}
 {cities}
 #vless# | {ping_text}
-Bot ϟ @NamiraNet ϟ"""
+Bot ϟ @jhjkkjkkbot ϟ"""
 
 async def main():
-    # اتصال با اکانت شخصی برای خواندن کانال منبع
-    user_client = TelegramClient("user", API_ID, API_HASH)
-    await user_client.start()  # با session کاربر وارد شو
+    async with TelegramClient("session", API_ID, API_HASH) as client, bot:
+        try:
+            source_entity = await client.get_entity(SOURCE_CHANNEL)
+        except Exception as e:
+            print(f"خطا در دریافت کانال منبع: {e}")
+            return
 
-    try:
-        source_entity = await user_client.get_entity(SOURCE_CHANNEL)
-    except Exception as e:
-        print(f"خطا در دریافت entity کانال منبع: {e}")
-        return
+        async for message in client.iter_messages(source_entity, limit=20, reverse=True):
+            if not isinstance(message, Message) or not message.text:
+                continue
 
-    async for message in user_client.iter_messages(source_entity, limit=20):
-        if not isinstance(message, Message) or not message.text:
-            continue
-        links = await extract_vless_links(message.text)
-        for link in links:
-            ip = get_ip_from_vless(link)
-            if ip:
-                country = get_country(ip)
-                ping_val = get_ping(ip)
-                formatted = format_output(link, country, ip, ping_val)
-                await bot.send_message(chat_id=DEST_CHANNEL, text=formatted)
-                await asyncio.sleep(1)
+            print("debugID:", message.id)
+            print("debugText:", message.text[:100])
+
+            links = await extract_vless_links(message.text)
+            for link in links:
+                ip = get_ip_from_vless(link)
+                if ip:
+                    country = get_country(ip)
+                    ping_val = get_ping(ip)
+                    formatted = format_output(link, country, ip, ping_val)
+                    try:
+                        await bot.send_message(chat_id=DEST_CHANNEL, text=formatted)
+                        await asyncio.sleep(1)
+                    except Exception as e:
+                        print(f"خطا در ارسال پیام: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
