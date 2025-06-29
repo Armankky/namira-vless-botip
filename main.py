@@ -12,8 +12,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
-DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
+SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")  # مثال: @source_channel_username
+DEST_CHANNEL = os.getenv("DEST_CHANNEL")      # مثال: @dest_channel_username
 
 ipinfo_handler = ipinfo.getHandler()
 
