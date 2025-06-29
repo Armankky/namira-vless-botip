@@ -3,18 +3,21 @@ import re
 import asyncio
 import ipinfo
 from ping3 import ping
-from telethon import TelegramClient, events
+from telethon import TelegramClient
 from telethon.tl.types import Message
-from aiogram import Bot
+from aiogram import Bot, Dispatcher
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-
-SOURCE_CHANNEL_USERNAME = "ipmoonir"  # یوزرنیم کانال منبع بدون @
-DEST_CHANNEL_USERNAME = "MsipCn"      # یوزرنیم کانال مقصد بدون @
+SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))  # مثال: -1002743822648
+DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))      # مثال: -1002714790180
 
 bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 ipinfo_handler = ipinfo.getHandler()
 
 async def extract_vless_links(text):
@@ -28,17 +31,16 @@ def get_country(ip):
     try:
         details = ipinfo_handler.getDetails(ip)
         country = details.country_name or "Unknown"
-        # ایموجی پرچم کشور
-        emoji = details.country_flag.get("emoji", "") if hasattr(details, "country_flag") else ""
+        emoji = getattr(details, "country_flag", {}).get("emoji", "")
         return f"{country} {emoji}".strip()
-    except Exception:
+    except:
         return "Unknown"
 
 def get_ping(ip):
     try:
         delay = ping(ip, timeout=2)
         return int(delay * 1000) if delay else None
-    except Exception:
+    except:
         return None
 
 def best_iranian_cities(ping_val):
@@ -48,7 +50,7 @@ def best_iranian_cities(ping_val):
 
 def format_output(vless_link, country, ip, ping_val):
     cities = best_iranian_cities(ping_val)
-    ping_text = f"Ping:{ping_val}ms" if ping_val is not None else "Ping: Timeout"
+    ping_text = f"Ping: {ping_val} ms" if ping_val is not None else "Ping: Timeout"
     return f"""Location : {country}
 {vless_link}
 {cities}
@@ -57,11 +59,11 @@ Bot ϟ @NamiraNet ϟ"""
 
 async def main():
     client = TelegramClient("session", API_ID, API_HASH)
-    await client.start()
+    await client.start(bot_token=BOT_TOKEN)
 
     try:
-        source_entity = await client.get_entity(SOURCE_CHANNEL_USERNAME)
-        dest_entity = await client.get_entity(DEST_CHANNEL_USERNAME)
+        source_entity = await client.get_entity(SOURCE_CHANNEL)
+        dest_entity = await client.get_entity(DEST_CHANNEL)
     except Exception as e:
         print(f"خطا در دریافت entity کانال: {e}")
         return
