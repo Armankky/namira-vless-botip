@@ -4,7 +4,7 @@ import asyncio
 import ipinfo
 from ping3 import ping
 from telethon import TelegramClient
-from telethon.tl.types import Message
+from telethon.tl.types import Message, PeerChannel
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
@@ -13,8 +13,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))  # مثال: -1002743822648
-DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))      # مثال: -1002714790180
+SOURCE_CHANNEL = int(os.getenv("@ipmoonir"))  # مثال: -1002743822648
+DEST_CHANNEL = int(os.getenv("@MsipCn"))      # مثال: -1002714790180
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -62,10 +62,10 @@ async def main():
     await client.start(bot_token=BOT_TOKEN)
 
     try:
-        source_entity = await client.get_entity(SOURCE_CHANNEL)
-        dest_entity = await client.get_entity(DEST_CHANNEL)
+        source_entity = PeerChannel(abs(SOURCE_CHANNEL))
+        dest_entity = PeerChannel(abs(DEST_CHANNEL))
     except Exception as e:
-        print(f"خطا در دریافت entity کانال: {e}")
+        print(f"خطا در ساخت entity کانال: {e}")
         return
 
     async for message in client.iter_messages(source_entity, limit=20):
@@ -78,7 +78,7 @@ async def main():
                 country = get_country(ip)
                 ping_val = get_ping(ip)
                 formatted = format_output(link, country, ip, ping_val)
-                await bot.send_message(chat_id=dest_entity.id, text=formatted)
+                await bot.send_message(chat_id=DEST_CHANNEL, text=formatted)
                 await asyncio.sleep(1)
 
 if __name__ == "__main__":
