@@ -3,16 +3,22 @@ import re
 import asyncio
 import ipinfo
 from ping3 import ping
-from telethon.sync import TelegramClient
+from telethon import TelegramClient
 from telethon.tl.types import Message
 from aiogram import Bot
+from dotenv import load_dotenv
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+load_dotenv()  # 加载 .env 文件
+
+# 读取环境变量
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
+PHONE_NUMBER = os.getenv("PHONE_NUMBER")
 SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")
 DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# 初始化机器人和 IP 信息查询
 bot = Bot(token=BOT_TOKEN)
 ipinfo_handler = ipinfo.getHandler()
 
@@ -42,7 +48,7 @@ def get_ping(ip):
 def best_iranian_cities(ping_val):
     if ping_val is None or ping_val > 1000:
         return ""
-    return "ϟ ᴠᴇʜʀɐɴ ϟ ʟɪʀɐʒ ϟ ʌсғɐʜɐɴ ϟ ᴋɐʀɐʒ ϟ"
+    return "ϟ ᴛᴇʜʀᴀɴ ϟ ꜱʜɪʀᴀᴢ ϟ ᴇsғᴀʜᴀɴ ϟ ᴋᴀʀᴀᴊ ϟ"
 
 def format_output(vless_link, country, ip, ping_val):
     cities = best_iranian_cities(ping_val)
@@ -54,8 +60,8 @@ def format_output(vless_link, country, ip, ping_val):
 Bot ϟ @NamiraNet ϟ"""
 
 async def main():
-    print("程序启动，连接 Telegram...")
-    client = TelegramClient("session", API_ID, API_HASH)
+    print("程序启动，连接 Telegram 用户账号...")
+    client = TelegramClient("user_session", API_ID, API_HASH)
     await client.start(phone=PHONE_NUMBER)
 
     async with client:
