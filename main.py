@@ -51,12 +51,12 @@ def format_output(vless_link, country, ip, ping_val):
 {vless_link}
 {cities}
 #vless# | {ping_text}
-Bot ϟ @jhjkkjkkbot ϟ"""
+Bot ϟ @NamiraNet ϟ"""
 
 async def main():
     print("程序启动，连接 Telegram...")
     client = TelegramClient("session", API_ID, API_HASH)
-    await client.start(bot_token=BOT_TOKEN)
+    await client.start(phone=PHONE_NUMBER)
 
     async with client:
         async for message in client.iter_messages(SOURCE_CHANNEL, reverse=True):
