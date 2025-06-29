@@ -13,8 +13,8 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("@ipmoonir"))  # مثال: -1002743822648
-DEST_CHANNEL = int(os.getenv("@MsipCn"))      # مثال: -1002714790180
+SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
+DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
