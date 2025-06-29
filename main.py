@@ -3,18 +3,18 @@ import re
 import asyncio
 import ipinfo
 from ping3 import ping
-from telethon.sync import TelegramClient
+from telethon import TelegramClient, errors
 from telethon.tl.types import Message
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
-load_dotenv()  # بارگذاری متغیرهای محیطی از فایل .env
+load_dotenv()  # بارگذاری متغیرهای محیطی از .env
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-SOURCE_CHANNEL = int(os.getenv("SOURCE_CHANNEL"))
-DEST_CHANNEL = int(os.getenv("DEST_CHANNEL"))
+SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")  # اگر عدد است، تبدیل می‌کنیم در ادامه
+DEST_CHANNEL = os.getenv("DEST_CHANNEL")      # همین‌طور
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -31,16 +31,17 @@ def get_country(ip):
     try:
         details = ipinfo_handler.getDetails(ip)
         country = details.country_name or "Unknown"
-        emoji = details.country_flag.get("emoji", "") if hasattr(details, "country_flag") else ""
+        # استفاده از پرچم به شکل ایموجی ممکن است محدود باشد
+        emoji = getattr(details, "country_flag", {}).get("emoji", "")
         return f"{country} {emoji}".strip()
-    except:
+    except Exception:
         return "Unknown"
 
 def get_ping(ip):
     try:
         delay = ping(ip, timeout=2)
         return int(delay * 1000) if delay else None
-    except:
+    except Exception:
         return None
 
 def best_iranian_cities(ping_val):
@@ -59,9 +60,25 @@ Bot ϟ @NamiraNet ϟ"""
 
 async def main():
     client = TelegramClient("session", API_ID, API_HASH)
-    await client.start(bot_token=BOT_TOKEN)
+    await client.start(bot_token=BOT_TOKEN)  # شروع با توکن ربات
 
-    source_entity = await client.get_entity(SOURCE_CHANNEL)
+    # تبدیل SOURCE_CHANNEL به int اگر عدد باشد، یا بگذار رشته بماند (مثلاً @channelusername)
+    source_channel = SOURCE_CHANNEL
+    if source_channel.isdigit() or (source_channel.startswith("-") and source_channel[1:].isdigit()):
+        source_channel = int(source_channel)
+
+    # تلاش برای گرفتن entity کانال با هندل (username) یا ID
+    try:
+        source_entity = await client.get_entity(source_channel)
+    except errors.UsernameInvalidError:
+        print("SOURCE_CHANNEL مقدار نادرست است یا کانال پیدا نشد.")
+        return
+    except errors.ChannelInvalidError:
+        print("کانال معتبر نیست یا دسترسی ندارید.")
+        return
+    except Exception as e:
+        print("خطا در دریافت entity کانال:", e)
+        return
 
     async for message in client.iter_messages(source_entity, limit=20):
         if not isinstance(message, Message) or not message.text:
@@ -73,7 +90,7 @@ async def main():
                 country = get_country(ip)
                 ping_val = get_ping(ip)
                 formatted = format_output(link, country, ip, ping_val)
-                await bot.send_message(chat_id=DEST_CHANNEL, text=formatted)
+                await bot.send_message(chat_id=int(DEST_CHANNEL), text=formatted)
                 await asyncio.sleep(1)
 
 if __name__ == "__main__":
